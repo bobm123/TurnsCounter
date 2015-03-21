@@ -31,10 +31,11 @@ void setup()   {
   digitalWrite(encoder0PinA, HIGH);       // turn on pullup resistor
   pinMode(encoder0PinB, INPUT); 
   digitalWrite(encoder0PinB, HIGH);       // turn on pullup resistor
-  attachInterrupt(0, doEncoder, CHANGE);  // encoder pin on interrupt 0 - pin 2
+  //attachInterrupt(0, doEncoder, CHANGE);  // encoder pin on interrupt 0 - pin 2
+  attachInterrupt(0, doEncoder, RISING);  // encoder pin on interrupt 0 - pin 2
 
   Serial.begin(115200);
-  Serial.print("TurnsCounter");
+  Serial.println("TurnsCounter");
 
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
@@ -77,7 +78,13 @@ void loop() {
         digitalWrite(ledPin, LOW);
         ledToggle = true;
       }
-    }    
+    }
+//    Serial.print("Enc A: ");
+//    Serial.print(digitalRead(encoder0PinA));
+//    Serial.print("Enc B: ");
+//    Serial.print(digitalRead(encoder0PinB));
+//    Serial.println("");
+//    delay(1000);
   }
   
 /*  
