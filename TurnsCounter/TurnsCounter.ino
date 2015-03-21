@@ -40,6 +40,7 @@ static const unsigned char PROGMEM logo16_glcd_bmp[] =
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 
+
 void setup()   {                
   Serial.begin(115200);
   Serial.print("Start");
@@ -52,8 +53,6 @@ void setup()   {
   // Since the buffer is intialized with an Adafruit splashscreen
   // internally, this will display the splashscreen.
   display.display();
-  display.clearDisplay();
-  //delay(2000);
 
   // Clear the buffer.
   display.clearDisplay();
@@ -66,26 +65,19 @@ void setup()   {
 void loop() {
   int turns = 0;
   int inc = 1;
-  display.setCursor(32,2);
-  display.setTextColor(WHITE);
-  display.println(turns);
-  display.display();
-  delay(200);
+  
+  //display.setCursor(32,2);
+//  display.setTextColor(WHITE);
+//  display.println(turns);
+//  display.display();
+//  delay(200);
   
   while (1) {
-  display.setCursor(32,2);
-    display.setTextColor(BLACK); 
-    display.println(turns);
-    //display.display();
+    UpdateCountDisplay(turns);
+
+    // simmulate encoder inputs
+    delay(20);
     turns += inc;
-    display.setCursor(32,2);
-    display.setTextColor(WHITE); 
-    display.println(turns);
-    display.display();
-  
-    Serial.println(turns);
-    delay(25);
-    
     if (turns > 1600) {
       inc = -1;
     }
@@ -93,6 +85,26 @@ void loop() {
       inc = 1;
     }
   }  
+}
+
+
+int _current_count = 0;
+
+void UpdateCountDisplay(int count)
+{
+  // erase the old value
+  display.setCursor(32,2);
+  display.setTextColor(BLACK); 
+  display.println(_current_count);
+
+  // show the new value    
+  display.setCursor(32,2);
+  display.setTextColor(WHITE); 
+  display.println(count);
+  display.display();
+
+  _current_count = count;
+  Serial.println(_current_count);
 }
 
 
