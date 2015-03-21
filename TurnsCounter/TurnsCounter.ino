@@ -1,19 +1,4 @@
 /*********************************************************************
-This is an example for our Monochrome OLEDs based on SSD1306 drivers
-
-  Pick one up today in the adafruit shop!
-  ------> http://www.adafruit.com/category/63_98
-
-This example is for a 128x32 size display using I2C to communicate
-3 pins are required to interface (2 I2C and one reset)
-
-Adafruit invests time and resources providing this open source code, 
-please support Adafruit and open-source hardware by purchasing 
-products from Adafruit!
-
-Written by Limor Fried/Ladyada  for Adafruit Industries.  
-BSD license, check license.txt for more information
-All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
 
 #include <SPI.h>
@@ -24,14 +9,15 @@ All text above, and the splash screen must be included in any redistribution
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
 
-#define NUMFLAKES 10
-#define XPOS 0
-#define YPOS 1
-#define DELTAY 2
+//#define NUMFLAKES 10
+//#define XPOS 0
+//#define YPOS 1
+//#define DELTAY 2
 
+//#define LOGO16_GLCD_HEIGHT 16 
+//#define LOGO16_GLCD_WIDTH  16 
 
-#define LOGO16_GLCD_HEIGHT 16 
-#define LOGO16_GLCD_WIDTH  16 
+/*
 static const unsigned char PROGMEM logo16_glcd_bmp[] =
 { B00000000, B11000000,
   B00000001, B11000000,
@@ -49,13 +35,13 @@ static const unsigned char PROGMEM logo16_glcd_bmp[] =
   B01111100, B11110000,
   B01110000, B01110000,
   B00000000, B00110000 };
-
+*/
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 
 void setup()   {                
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.print("Start");
 
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
@@ -72,89 +58,8 @@ void setup()   {
   // Clear the buffer.
   display.clearDisplay();
 
-  // draw a single pixel
-//  display.drawPixel(10, 10, WHITE);
-  // Show the display buffer on the hardware.
-  // NOTE: You _must_ call display after making any drawing commands
-  // to make them visible on the display hardware!
-//  display.display();
-
-//  delay(2000);
-//  display.clearDisplay();
-
-  // draw many lines
-//  testdrawline();
-//  display.display();
-//  delay(2000);
-//  display.clearDisplay();
-
-  // draw rectangles
-//  testdrawrect();
-//  display.display();
-//  delay(2000);
-//  display.clearDisplay();
-
-  // draw multiple rectangles
-//  testfillrect();
-//  display.display();
-//  delay(2000);
-//  display.clearDisplay();
-
-  // draw mulitple circles
-//  testdrawcircle();
-//  display.display();
-//  delay(2000);
-//  display.clearDisplay();
-
-  // draw a white circle, 10 pixel radius
-//  display.fillCircle(display.width()/2, display.height()/2, 10, WHITE);
-//  display.display();
-//  delay(2000);
-//  display.clearDisplay();
-
-//  testdrawroundrect();
-//  delay(2000);
-//  display.clearDisplay();
-
-//  testfillroundrect();
-//  delay(2000);
-//  display.clearDisplay();
-
-//  testdrawtriangle();
-//  delay(2000);
-//  display.clearDisplay();
-   
-//  testfilltriangle();
-//  delay(2000);
-//  display.clearDisplay();
-
-  // draw the first ~12 characters in the font
-//  testdrawchar();
-//  display.display();
-//  delay(2000);
-//  display.clearDisplay();
-
-  // draw scrolling text
-//  testscrolltext();
-//  delay(2000);
-//  display.clearDisplay();
-
   // text display tests
   display.setTextSize(4);
-
-  // miniature bitmap display
-//  display.clearDisplay();
-//  display.drawBitmap(30, 16,  logo16_glcd_bmp, 16, 16, 1);
-//  display.display();
-
-  // invert the display
-//  display.invertDisplay(true);
-//  delay(1000); 
-//  display.invertDisplay(false);
-//  delay(1000); 
-
-  // draw a bitmap icon and 'animate' movement
-//  testdrawbitmap(logo16_glcd_bmp, LOGO16_GLCD_HEIGHT, LOGO16_GLCD_WIDTH);
 }
 
 
@@ -200,7 +105,7 @@ void loop() {
 */  
 
 
-
+/*
 void testdrawbitmap(const uint8_t *bitmap, uint8_t w, uint8_t h) {
   uint8_t icons[NUMFLAKES][3];
  
@@ -241,8 +146,9 @@ void testdrawbitmap(const uint8_t *bitmap, uint8_t w, uint8_t h) {
    }
   
 }
+*/
 
-
+/*
 void testdrawchar(void) {
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -363,6 +269,7 @@ void testdrawline() {
   }
   delay(250);
 }
+*/
 
 void testscrolltext(void) {
   display.setTextSize(2);
