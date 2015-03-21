@@ -9,6 +9,129 @@
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
 
+#define ledPin 13
+#define encoder0PinA  2
+#define encoder0PinB  3
+
+volatile unsigned int encoder0Pos = 0;
+volatile bool new_value = true;
+
+bool ledToggle = false;
+int _current_count = 0;
+
+#if (SSD1306_LCDHEIGHT != 32)
+#error("Height incorrect, please fix Adafruit_SSD1306.h!");
+#endif
+
+void setup()   {
+  
+  pinMode(ledPin, OUTPUT);
+
+  pinMode(encoder0PinA, INPUT); 
+  digitalWrite(encoder0PinA, HIGH);       // turn on pullup resistor
+  pinMode(encoder0PinB, INPUT); 
+  digitalWrite(encoder0PinB, HIGH);       // turn on pullup resistor
+  attachInterrupt(0, doEncoder, CHANGE);  // encoder pin on interrupt 0 - pin 2
+
+  Serial.begin(115200);
+  Serial.print("TurnsCounter");
+
+  // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
+  // init done
+  
+  // Show image buffer on the display hardware.
+  // Since the buffer is intialized with an Adafruit splashscreen
+  // internally, this will display the splashscreen.
+  display.display();
+
+  // Clear the buffer.
+  display.clearDisplay();
+
+  // It could go as high as 5, but then it cuts off the bottom line)
+  display.setTextSize(4);
+}
+
+
+void loop() {
+  int turns = 0;
+  int inc = 1;
+  
+  //display.setCursor(32,2);
+//  display.setTextColor(WHITE);
+//  display.println(turns);
+//  display.display();
+//  delay(200);
+
+  // Print any new count values and toggle the output LED
+  while (true) {
+    if (new_value) {
+      UpdateCountDisplay(encoder0Pos);
+      new_value = false;
+      
+      if (ledToggle) {
+        digitalWrite(ledPin, HIGH);
+        ledToggle = false;
+      }
+      else {
+        digitalWrite(ledPin, LOW);
+        ledToggle = true;
+      }
+    }    
+  }
+  
+/*  
+  while (1) {
+    UpdateCountDisplay(turns);
+
+    // simmulate encoder inputs
+    delay(20);
+    turns += inc;
+    if (turns > 1600) {
+      inc = -1;
+    }
+    if (turns <= 0) {
+      inc = 1;
+    }
+  }  
+*/
+}
+
+void doEncoder() {
+  /* If pinA and pinB are both high or both low, it is spinning
+   * forward. If they're different, it's going backward.
+   *
+   * For more information on speeding up this process, see
+   * [Reference/PortManipulation], specifically the PIND register.
+   */
+  if (digitalRead(encoder0PinA) == digitalRead(encoder0PinB)) {
+    encoder0Pos += 1;
+    new_value = true;
+  } else {
+    encoder0Pos += -1;
+    new_value = true;
+  }
+}
+
+
+void UpdateCountDisplay(int count)
+{
+  // erase the old value
+  display.setCursor(32,2);
+  display.setTextColor(BLACK); 
+  display.println(_current_count);
+
+  // show the new value    
+  display.setCursor(32,2);
+  display.setTextColor(WHITE); 
+  display.println(count);
+  display.display();
+
+  _current_count = count;
+  Serial.println(_current_count);
+}
+
+
 //#define NUMFLAKES 10
 //#define XPOS 0
 //#define YPOS 1
@@ -36,85 +159,7 @@ static const unsigned char PROGMEM logo16_glcd_bmp[] =
   B01110000, B01110000,
   B00000000, B00110000 };
 */
-#if (SSD1306_LCDHEIGHT != 32)
-#error("Height incorrect, please fix Adafruit_SSD1306.h!");
-#endif
 
-
-void setup()   {                
-  Serial.begin(115200);
-  Serial.print("Start");
-
-  // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
-  // init done
-  
-  // Show image buffer on the display hardware.
-  // Since the buffer is intialized with an Adafruit splashscreen
-  // internally, this will display the splashscreen.
-  display.display();
-
-  // Clear the buffer.
-  display.clearDisplay();
-
-  // text display tests
-  display.setTextSize(4);
-}
-
-
-void loop() {
-  int turns = 0;
-  int inc = 1;
-  
-  //display.setCursor(32,2);
-//  display.setTextColor(WHITE);
-//  display.println(turns);
-//  display.display();
-//  delay(200);
-  
-  while (1) {
-    UpdateCountDisplay(turns);
-
-    // simmulate encoder inputs
-    delay(20);
-    turns += inc;
-    if (turns > 1600) {
-      inc = -1;
-    }
-    if (turns <= 0) {
-      inc = 1;
-    }
-  }  
-}
-
-
-int _current_count = 0;
-
-void UpdateCountDisplay(int count)
-{
-  // erase the old value
-  display.setCursor(32,2);
-  display.setTextColor(BLACK); 
-  display.println(_current_count);
-
-  // show the new value    
-  display.setCursor(32,2);
-  display.setTextColor(WHITE); 
-  display.println(count);
-  display.display();
-
-  _current_count = count;
-  Serial.println(_current_count);
-}
-
-
-/*  
-  display.setTextColor(BLACK, WHITE); // 'inverted' text
-  display.println(3.141592);
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
-  display.print("0x"); display.println(0xDEADBEEF, HEX);
-*/  
 
 
 /*
