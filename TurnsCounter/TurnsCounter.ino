@@ -1,4 +1,13 @@
 /*********************************************************************
+Turns counter for 3D printed Rubber Motor Winder
+
+Uses two hall effect devices to count tunrs on the output shaft in 
+either direction and display total count on an OLED display. A reset 
+button zeros the count. Future: hold button while turning the crank
+to set turns limit. Display shows a progrss bar and flashes a warning 
+at 80% and 90% of set point. On/Off switch and sleep mode to presever
+LiPo batter. Rechargable from a usb cable
+
 *********************************************************************/
 
 #include <SPI.h>
@@ -10,6 +19,7 @@
 Adafruit_SSD1306 display(OLED_RESET);
 
 #define ledPin 13
+#define buttonPin 5
 #define encoder0PinA  2
 #define encoder0PinB  3
 
@@ -27,6 +37,8 @@ void setup()   {
   
   pinMode(ledPin, OUTPUT);
 
+  pinMode(buttonPin, INPUT);
+  
   pinMode(encoder0PinA, INPUT); 
   digitalWrite(encoder0PinA, HIGH);       // turn on pullup resistor
   pinMode(encoder0PinB, INPUT); 
@@ -57,6 +69,7 @@ void setup()   {
 void loop() {
   int turns = 0;
   int inc = 1;
+  int buttonState = 0;
   
   //display.setCursor(32,2);
 //  display.setTextColor(WHITE);
@@ -79,6 +92,13 @@ void loop() {
         ledToggle = true;
       }
     }
+
+    buttonState = digitalRead(buttonPin);
+    if (buttonState == HIGH) {
+      encoder0Pos = 0;
+      new_value = true;
+    }
+
 //    Serial.print("Enc A: ");
 //    Serial.print(digitalRead(encoder0PinA));
 //    Serial.print("Enc B: ");
