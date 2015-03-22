@@ -15,15 +15,16 @@ LiPo batter. Rechargable from a usb cable
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#define OLED_RESET 4
+#define ledPin        13   // onboard LED
+#define encoder0PinA  2    // interrrupt 0
+#define buttonPin     3    // interrrupt 1
+#define encoder0PinB  4
+#define OLED_RESET    5
+
 Adafruit_SSD1306 display(OLED_RESET);
 
-#define ledPin 13
-#define buttonPin 5
-#define encoder0PinA  2
-#define encoder0PinB  3
-
 volatile unsigned int encoder0Pos = 0;
+volatile int buttonState;
 volatile bool new_value = true;
 
 bool ledToggle = false;
@@ -38,12 +39,13 @@ void setup()   {
   pinMode(ledPin, OUTPUT);
 
   pinMode(buttonPin, INPUT);
+  attachInterrupt(1, doButton, CHANGE);  // encoder pin on interrupt 0 - pin 4
   
   pinMode(encoder0PinA, INPUT); 
   digitalWrite(encoder0PinA, HIGH);       // turn on pullup resistor
   pinMode(encoder0PinB, INPUT); 
   digitalWrite(encoder0PinB, HIGH);       // turn on pullup resistor
-  //attachInterrupt(0, doEncoder, CHANGE);  // encoder pin on interrupt 0 - pin 2
+  
   attachInterrupt(0, doEncoder, RISING);  // encoder pin on interrupt 0 - pin 2
 
   Serial.begin(115200);
@@ -51,7 +53,6 @@ void setup()   {
 
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
-  // init done
   
   // Show image buffer on the display hardware.
   // Since the buffer is intialized with an Adafruit splashscreen
@@ -80,9 +81,17 @@ void loop() {
   // Print any new count values and toggle the output LED
   while (true) {
     if (new_value) {
-      UpdateCountDisplay(encoder0Pos);
+      
+      if (buttonState == LOW) {
+        UpdateCountDisplay(encoder0Pos);
+      }
+      else {
+        encoder0Pos = 0;
+      }
+      
       new_value = false;
       
+      // toggle LED every time a new position is entered
       if (ledToggle) {
         digitalWrite(ledPin, HIGH);
         ledToggle = false;
@@ -123,6 +132,17 @@ void loop() {
   }  
 */
 }
+
+
+void doButton() {
+    buttonState = digitalRead(buttonPin);
+    new_value = true;
+//    if (buttonState == HIGH) {
+//      encoder0Pos = 0;
+//      new_value = true;
+//    }
+}
+
 
 void doEncoder() {
   /* If pinA and pinB are both high or both low, it is spinning
