@@ -14,6 +14,7 @@ LiPo batter. Rechargeable from a USB cable
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <avr/eeprom.h>
 
 #define ledPin        13   // onboard LED
 #define encoder0PinA  2    // interrrupt 0
@@ -26,8 +27,9 @@ Adafruit_SSD1306 display(OLED_RESET);
 volatile unsigned int encoder0Pos = 0;
 volatile int buttonState;
 volatile bool new_value = true;
+volatile long buttonPressMillis;
 
-bool ledToggle = false;
+//bool ledToggle = false;
 int _current_count = 0;
 
 #if (SSD1306_LCDHEIGHT != 32)
@@ -39,7 +41,7 @@ void setup()   {
   pinMode(ledPin, OUTPUT);
 
   pinMode(buttonPin, INPUT);
-  attachInterrupt(1, doButton, CHANGE);  // encoder pin on interrupt 0 - pin 4
+  attachInterrupt(1, doButton, RISING);  // encoder pin on interrupt 0 - pin 4
   
   pinMode(encoder0PinA, INPUT); 
   digitalWrite(encoder0PinA, HIGH);       // turn on pullup resistor
@@ -71,6 +73,11 @@ void loop() {
   int turns = 0;
   int inc = 1;
   int buttonState = 0;
+  //unsigned long currentMillis;
+  bool setMode = false;
+  //currentMillis = millis();
+  
+  buttonPressMillis = 0;
   
   //display.setCursor(32,2);
 //  display.setTextColor(WHITE);
@@ -80,6 +87,39 @@ void loop() {
 
   // Print any new count values and toggle the output LED
   while (true) {
+    if (setMode == false) {
+      if (digitalRead(buttonPin)) {
+        if (millis() - buttonPressMillis  > 3000) {
+          buttonPressMillis = 0;
+          setMode = true;
+          Serial.println("goto set mode");
+        }
+      }
+      else {
+        buttonPressMillis = 0;
+      }
+    }
+    else {
+      if (digitalRead(buttonPin)) {
+        if (millis() - buttonPressMillis  > 1000) {
+          buttonPressMillis = 0;
+          setMode = false;
+          Serial.println("leave set mode");
+        }
+      }      
+      else {
+        buttonPressMillis = 0;
+      }
+    }
+
+    // Turn LED On while in set mode
+    if (setMode) {
+      digitalWrite(ledPin, HIGH);
+    }
+    else {
+      digitalWrite(ledPin, LOW);
+    }
+    
     if (new_value) {
       
       if (buttonState == LOW) {
@@ -88,32 +128,9 @@ void loop() {
       else {
         encoder0Pos = 0;
       }
-      
       new_value = false;
-      
-      // toggle LED every time a new position is entered
-      if (ledToggle) {
-        digitalWrite(ledPin, HIGH);
-        ledToggle = false;
-      }
-      else {
-        digitalWrite(ledPin, LOW);
-        ledToggle = true;
-      }
     }
 
-    buttonState = digitalRead(buttonPin);
-    if (buttonState == HIGH) {
-      encoder0Pos = 0;
-      new_value = true;
-    }
-
-//    Serial.print("Enc A: ");
-//    Serial.print(digitalRead(encoder0PinA));
-//    Serial.print("Enc B: ");
-//    Serial.print(digitalRead(encoder0PinB));
-//    Serial.println("");
-//    delay(1000);
   }
   
 /*  
@@ -137,6 +154,7 @@ void loop() {
 void doButton() {
     buttonState = digitalRead(buttonPin);
     new_value = true;
+    buttonPressMillis = millis();
 //    if (buttonState == HIGH) {
 //      encoder0Pos = 0;
 //      new_value = true;
