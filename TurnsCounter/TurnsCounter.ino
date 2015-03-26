@@ -27,7 +27,8 @@ Adafruit_SSD1306 display(OLED_RESET);
 volatile unsigned int encoder0Pos = 0;
 volatile int buttonState;
 volatile bool new_value = true;
-volatile long buttonPressMillis;
+volatile long buttonUpMillis;
+volatile long buttonDownMillis;
 
 //bool ledToggle = false;
 int _current_count = 0;
@@ -41,7 +42,7 @@ void setup()   {
   pinMode(ledPin, OUTPUT);
 
   pinMode(buttonPin, INPUT);
-  attachInterrupt(1, doButton, RISING);  // encoder pin on interrupt 0 - pin 4
+  attachInterrupt(1, doButton, CHANGE);  // encoder pin on interrupt 0 - pin 4
   
   pinMode(encoder0PinA, INPUT); 
   digitalWrite(encoder0PinA, HIGH);       // turn on pullup resistor
@@ -72,45 +73,35 @@ void setup()   {
 void loop() {
   int turns = 0;
   int inc = 1;
-  int buttonState = 0;
-  //unsigned long currentMillis;
+  int prevButtonState = 0;
   bool setMode = false;
-  //currentMillis = millis();
   
-  buttonPressMillis = 0;
+  buttonUpMillis = 0;
+  buttonDownMillis = 0;
   
-  //display.setCursor(32,2);
-//  display.setTextColor(WHITE);
-//  display.println(turns);
-//  display.display();
-//  delay(200);
-
   // Print any new count values and toggle the output LED
   while (true) {
-    if (setMode == false) {
-      if (digitalRead(buttonPin)) {
-        if (millis() - buttonPressMillis  > 3000) {
-          buttonPressMillis = 0;
+
+    if (buttonState == HIGH) {
+      if (millis() - buttonDownMillis > 3000) {
+        if (setMode == false) {
           setMode = true;
           Serial.println("goto set mode");
         }
       }
-      else {
-        buttonPressMillis = 0;
+    }
+    
+    if (prevButtonState == LOW && buttonState == HIGH) {
+      Serial.println("State change low to high");
+      if (setMode == true) {
+        setMode = false;
+        Serial.println("leave set mode");
       }
     }
-    else {
-      if (digitalRead(buttonPin)) {
-        if (millis() - buttonPressMillis  > 1000) {
-          buttonPressMillis = 0;
-          setMode = false;
-          Serial.println("leave set mode");
-        }
-      }      
-      else {
-        buttonPressMillis = 0;
-      }
-    }
+//    if (prevButtonState == HIGH && buttonState == LOW) {
+//      Serial.println("State change high to low");
+//    }
+    prevButtonState = buttonState;
 
     // Turn LED On while in set mode
     if (setMode) {
@@ -130,7 +121,6 @@ void loop() {
       }
       new_value = false;
     }
-
   }
   
 /*  
@@ -152,13 +142,14 @@ void loop() {
 
 
 void doButton() {
-    buttonState = digitalRead(buttonPin);
-    new_value = true;
-    buttonPressMillis = millis();
-//    if (buttonState == HIGH) {
-//      encoder0Pos = 0;
-//      new_value = true;
-//    }
+  buttonState = digitalRead(buttonPin);
+  new_value = true;
+  if (buttonState) {
+    buttonDownMillis = millis();
+  }
+  else {
+    buttonUpMillis = millis();
+  }
 }
 
 
