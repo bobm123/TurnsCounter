@@ -1,12 +1,12 @@
 /*********************************************************************
 Turns counter for 3D printed Rubber Motor Winder
 
-Uses two hall effect devices to count tunrs on the output shaft in 
+Uses two hall effect devices to count turns on the output shaft in 
 either direction and display total count on an OLED display. A reset 
 button zeros the count. Future: hold button while turning the crank
-to set turns limit. Display shows a progrss bar and flashes a warning 
-at 80% and 90% of set point. On/Off switch and sleep mode to presever
-LiPo batter. Rechargable from a usb cable
+to set turns limit. Display shows a progress bar and flashes a warning 
+at 80% and 90% of set point. On/Off switch and sleep mode to preserve
+LiPo batter. Rechargeable from a USB cable
 
 *********************************************************************/
 
