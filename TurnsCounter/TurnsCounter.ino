@@ -109,16 +109,13 @@ void loop() {
     prevButtonState = buttonState;
 
     // Something changeD, so update values and displap
-    // Turn LED indicates setMode
     if (prevEncoderPos != encoderPos) {
       refreshDisplay = true;
       if (setMode) {
         maxTurns += 10 *(encoderPos - prevEncoderPos);
-        digitalWrite(ledPin, HIGH);
       }
       else {
         turnsCount += encoderPos - prevEncoderPos;
-        digitalWrite(ledPin, LOW);
       }
       prevEncoderPos = encoderPos;
     }
@@ -128,8 +125,10 @@ void loop() {
       refreshDisplay = false;
     }
 
-  }
-}
+    // LED indicates setMode
+    digitalWrite(ledPin, setMode);
+  } //end while(true)
+} // end loop()
 
 
 void doButton() {
