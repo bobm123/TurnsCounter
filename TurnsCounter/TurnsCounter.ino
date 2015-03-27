@@ -10,10 +10,11 @@ LiPo batter. Rechargeable from a USB cable
 
 *********************************************************************/
 
-#include <SPI.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+//#include <SPI.h>
+//#include <Wire.h>
+//#include <Adafruit_GFX.h>
+//#include <Adafruit_SSD1306.h>
+#include "U8glib.h"
 #include <avr/eeprom.h>
 
 #define ledPin        13   // onboard LED
@@ -22,7 +23,8 @@ LiPo batter. Rechargeable from a USB cable
 #define encoder0PinB  4
 #define OLED_RESET    5
 
-Adafruit_SSD1306 display(OLED_RESET);
+//Adafruit_SSD1306 display(OLED_RESET);
+U8GLIB_SSD1306_128X32 u8g(U8G_I2C_OPT_NONE);	// I2C / TWI 
 
 #define SETMODETIME  2000
 #define DEFAULTMAX   1000
@@ -35,9 +37,9 @@ volatile long buttonDownMillis;
 //bool ledToggle = false;
 int _current_count = 0;
 
-#if (SSD1306_LCDHEIGHT != 32)
-#error("Height incorrect, please fix Adafruit_SSD1306.h!");
-#endif
+//#if (SSD1306_LCDHEIGHT != 32)
+//#error("Height incorrect, please fix Adafruit_SSD1306.h!");
+//#endif
 
 void setup()   {
   
@@ -56,6 +58,7 @@ void setup()   {
   Serial.begin(115200);
   Serial.println("TurnsCounter");
 
+/*
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
   
@@ -70,6 +73,10 @@ void setup()   {
   // It could go as high as 5, but then it cuts off the bottom line)
   display.setTextColor(WHITE); 
   display.setTextSize(4);
+*/
+
+  u8g.setColorIndex(1);         // pixel on
+
 }
 
 
@@ -120,13 +127,26 @@ void loop() {
       prevEncoderPos = encoderPos;
     }
     
-    if (refreshDisplay) {
-      UpdateCountDisplay(turnsCount, maxTurns, setMode);
-      refreshDisplay = false;
-    }
-
     // LED indicates setMode
     digitalWrite(ledPin, setMode);
+    
+    // Update Adafruit Display Drivers
+    //if (refreshDisplay) {
+    //  UpdateCountDisplay(turnsCount, maxTurns, setMode);
+    //  refreshDisplay = false;
+    //}
+    // Update Adafruit Display Drivers
+
+    // u8glib picture loop
+    u8g.firstPage();  
+    do {
+      UpdateCountDisplay_u8g(turnsCount, maxTurns, setMode);
+    } while( u8g.nextPage() );
+    
+    // rebuild the picture after some delay
+    delay(50);
+    // u8glib picture loop
+  
   } //end while(true)
 } // end loop()
 
@@ -151,7 +171,7 @@ void doEncoder() {
   }
 }
 
-
+/*
 void UpdateCountDisplay(int turnsCount, int maxCount, bool setMode)
 {
   // erase the old value
@@ -176,5 +196,31 @@ void UpdateCountDisplay(int turnsCount, int maxCount, bool setMode)
   Serial.print(maxCount);
   Serial.print(", ");
   Serial.println(setMode);
+}
+*/
+
+
+void UpdateCountDisplay_u8g(int turnsCount, int maxCount, bool setMode)
+{
+  // show the new value    
+  if (setMode)  {
+    u8g.setFont(u8g_font_helvR12);  
+    u8g.setPrintPos(0, 12);
+    u8g.print("Set MAX");
+    u8g.setPrintPos(0, 30);
+    u8g.print(maxCount);
+  }
+  else {
+    u8g.setFont(u8g_font_helvR24);  
+    u8g.setPrintPos(0, 30);
+    u8g.print(turnsCount);
+  }
+  //display.display();
+  
+  //Serial.print(turnsCount);
+  //Serial.print(", ");
+  //Serial.print(maxCount);
+  //Serial.print(", ");
+  //Serial.println(setMode);
 }
 
