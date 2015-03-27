@@ -25,11 +25,11 @@ LiPo batter. Rechargeable from a USB cable
 Adafruit_SSD1306 display(OLED_RESET);
 
 #define SETMODETIME  2000
+#define DEFAULTMAX   1000
 
 volatile unsigned int encoderPos = 0;
 volatile int buttonState;
 volatile bool refreshDisplay = true;
-volatile long buttonUpMillis;
 volatile long buttonDownMillis;
 
 //bool ledToggle = false;
@@ -75,35 +75,30 @@ void setup()   {
 
 void loop() {
   int turnsCount = 0;
-  int maxTurns = 1600; // TODO: save last value in  NVRAM
+  int maxTurns = DEFAULTMAX; // TODO: save last value in  NVRAM
   int inc = 1;
   int prevButtonState = 0;
   int prevEncoderPos = 0;
   bool setMode = false;
   
-  buttonUpMillis = 0;
   buttonDownMillis = 0;
   
   // Print any new count values and toggle the output LED
   while (true) {
 
-    if (prevEncoderPos != encoderPos) {
-      refreshDisplay = true;
-      prevEncoderPos = encoderPos;
-    }
-    
+    // State Machine with two states (setMode=[true,false])
     if (buttonState == HIGH) {
       if (millis() - buttonDownMillis > SETMODETIME) {
         if (setMode == false) {
           setMode = true;
+          //maxTurns = DEFAULTMAX;
           refreshDisplay = true;
           Serial.println("goto set mode");
         }
       }
     }
-    
     if (prevButtonState == LOW && buttonState == HIGH) {
-      encoderPos = 0;
+      turnsCount = 0;
       refreshDisplay = true;
       Serial.println("State change low to high");
       if (setMode == true) {
@@ -111,26 +106,28 @@ void loop() {
         Serial.println("leave set mode");
       }
     }
-//    if (prevButtonState == HIGH && buttonState == LOW) {
-//      Serial.println("State change high to low");
-//    }
-
     prevButtonState = buttonState;
 
-    // Turn LED On while in set mode, 
-    if (setMode) {
-      maxTurns = encoderPos;
-      digitalWrite(ledPin, HIGH);
-    }
-    else {
-      turnsCount = encoderPos;
-      digitalWrite(ledPin, LOW);
+    // Something changeD, so update values and displap
+    // Turn LED indicates setMode
+    if (prevEncoderPos != encoderPos) {
+      refreshDisplay = true;
+      if (setMode) {
+        maxTurns += 10 *(encoderPos - prevEncoderPos);
+        digitalWrite(ledPin, HIGH);
+      }
+      else {
+        turnsCount += encoderPos - prevEncoderPos;
+        digitalWrite(ledPin, LOW);
+      }
+      prevEncoderPos = encoderPos;
     }
     
     if (refreshDisplay) {
       UpdateCountDisplay(turnsCount, maxTurns, setMode);
       refreshDisplay = false;
     }
+
   }
 }
 
@@ -141,18 +138,12 @@ void doButton() {
   if (buttonState) {
     buttonDownMillis = millis();
   }
-  else {
-    buttonUpMillis = millis();
-  }
 }
 
 
 void doEncoder() {
   /* If pinA and pinB are both high or both low, it is spinning
    * forward. If they're different, it's going backward.
-   *
-   * For more information on speeding up this process, see
-   * [Reference/PortManipulation], specifically the PIND register.
    */
   if (digitalRead(encoder0PinA) == digitalRead(encoder0PinB)) {
     encoderPos += 1;
@@ -186,29 +177,5 @@ void UpdateCountDisplay(int turnsCount, int maxCount, bool setMode)
   Serial.print(maxCount);
   Serial.print(", ");
   Serial.println(setMode);
-}
-
-
-void testscrolltext(void) {
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
-  display.setCursor(10,0);
-  display.clearDisplay();
-  display.println("scroll");
-  display.display();
- 
-  display.startscrollright(0x00, 0x0F);
-  delay(2000);
-  display.stopscroll();
-  delay(1000);
-  display.startscrollleft(0x00, 0x0F);
-  delay(2000);
-  display.stopscroll();
-  delay(1000);    
-  display.startscrolldiagright(0x00, 0x07);
-  delay(2000);
-  display.startscrolldiagleft(0x00, 0x07);
-  delay(2000);
-  display.stopscroll();
 }
 
