@@ -25,19 +25,24 @@ void loop() {
 
 
 void InitialiseIO(){
-  pinMode(A0, INPUT);	   // Pin A0 is input to which a switch is connected
-  digitalWrite(A0, HIGH);   // Configure internal pull-up resistor
+  //pinMode(A0, INPUT);	   // Pin A0 is input to which a switch is connected
+  //digitalWrite(A0, HIGH);   // Configure internal pull-up resistor
   pinMode(A1, INPUT);	   // Pin A1 is input to which a switch is connected
-  digitalWrite(A1, HIGH);   // Configure internal pull-up resistor
+  //digitalWrite(A1, HIGH);   // Configure internal pull-up resistor
   pinMode(A2, INPUT);	   // Pin A2 is input to which a switch is connected
-  digitalWrite(A2, HIGH);   // Configure internal pull-up resistor
+  //digitalWrite(A2, HIGH);   // Configure internal pull-up resistor
+  //pinMode(A3, INPUT);	   // Pin A2 is input to which a switch is connected
+  //digitalWrite(A3, HIGH);   // Configure internal pull-up resistor
+
+  pinMode(A0, INPUT_PULLUP);   // Pin A0 is input with internal pull-up resistor
+  pinMode(A3, INPUT_PULLUP);   // Pin A2 is input with internal pull-up resistor
 }
 
 
 void InitialiseInterrupt(){
   cli();		// switch interrupts off while messing with their settings  
   PCICR =0x02;          // Enable PCINT1 interrupt
-  PCMSK1 = 0b00000111;  // Mask lower 3 bits
+  PCMSK1 = 0b00001110;  // Mask lower 3 bits
   sei();		// turn interrupts back on
 }
 
@@ -48,4 +53,6 @@ ISR(PCINT1_vect) {
   if (digitalRead(A0)==0)  Serial.println("A0");
   if (digitalRead(A1)==0)  Serial.println("A1");
   if (digitalRead(A2)==0)  Serial.println("A2");
+  if (digitalRead(A3)==0)  Serial.println("A3 Low");
+  if (digitalRead(A3)==1)  Serial.println("A3 High");
 }
