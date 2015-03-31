@@ -57,6 +57,7 @@ void setup()   {
   pinMode(ledPin, OUTPUT);
 
   pinMode(buttonPin, INPUT_PULLUP);
+  //pinMode(buttonPin, INPUT);
   //attachInterrupt(1, doButton, CHANGE);  // encoder pin on interrupt 0 - pin 4
   
   pinMode(encoder0PinA, INPUT_PULLUP); 
@@ -125,7 +126,7 @@ void loop() {
         }
       }
     }
-    if (prevButtonState == LOW && buttonState == HIGH) {
+    if (prevButtonState == HIGH && buttonState == LOW) {
       turnsCount = 0;
       refreshDisplay = true;
       Serial.println("State change Low to High");
@@ -200,14 +201,15 @@ ISR(PCINT1_vect) {
   if (digitalRead(A3)==1)  Serial.println("A3 High");
 */  
   //Emulate AttachInterrupt (..., CHANGE)
-  if (digitalRead(buttonPin) != prev_buttonPin) {
-    doButton(digitalRead(buttonPin));
+  int bp = digitalRead(buttonPin);
+  if (bp != prev_buttonPin) {
+    doButton(bp);
   }
 
   //Emulate AttachInterrupt (..., RISING)
   if (digitalRead(encoder0PinA)==0 && prev_encoder0PinA == 1) {
     doEncoder();
-    Serial.println("Encoder Update");
+//    Serial.println("Encoder Update");
   }
   prev_buttonPin = digitalRead(buttonPin);
   prev_encoder0PinA = digitalRead(encoder0PinA);
