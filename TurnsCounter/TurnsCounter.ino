@@ -14,17 +14,15 @@ LiPo batter. Rechargeable from a USB cable
 #include <avr/eeprom.h>
 
 #define LEDPIN        13   // onboard LED
-
 #define ENCODER_PINB  A1    // Port 2 Interrupt 1
 #define ENCODER_PINA  A2    // P2 interrupt 2
-#define BUTTON_PIN     A3    // P2 interrupt 3
-
+#define BUTTON_PIN    A3    // P2 interrupt 3
 #define OLED_RESET    5
 
 U8GLIB_SSD1306_128X32 u8g(U8G_I2C_OPT_NONE);	// I2C / TWI 
 
 #define SETMODETIME  2000
-#define DEFAULTMAX   1000
+#define DEFAULTMAX   1600
 
 volatile unsigned int gEncoderPos = 0;
 volatile int gButtonState;
@@ -168,20 +166,27 @@ void doEncoder() {
 }
 
 
-void UpdateCountDisplay_u8g(int turnsCount, int maxCount, bool setMode)
+void UpdateCountDisplay_u8g(long tc, int mc, bool mode)
 {
   // show the new value    
-  if (setMode)  {
+  if (mode)  {
     u8g.setFont(u8g_font_helvR12);  
     u8g.setPrintPos(0, 12);
     u8g.print("Set Max Turns");
-    u8g.setPrintPos(0, 30);
-    u8g.print(maxCount);
+    u8g.setPrintPos(80, 30);
+    u8g.print(mc);
   }
   else {
+    long pt = 100 * abs(tc) / mc;
     u8g.setFont(u8g_font_helvR24);  
     u8g.setPrintPos(0, 30);
-    u8g.print(turnsCount);
+    u8g.print(tc);
+    u8g.setFont(u8g_font_helvR12);  
+    u8g.setPrintPos(80, 12);
+    u8g.print(pt);
+    u8g.print(" %");
+    u8g.setPrintPos(80, 30);
+    u8g.print(mc);
   }
 }
 
