@@ -26,7 +26,7 @@ U8GLIB_SSD1306_128X32 u8g(U8G_I2C_OPT_NONE);	// I2C / TWI
 
 volatile unsigned int gEncoderPos = 0;
 volatile int gButtonState;
-volatile bool gRefreshDisplay = true;
+//volatile bool gRefreshDisplay = true;
 volatile long gButtonDownMillis;
 volatile int gPrevButtonPin;  
 volatile int gPrevEncoderPinA;
@@ -72,7 +72,7 @@ void loop() {
         if (setMode == false) {
           setMode = true;
           //maxTurns = DEFAULTMAX;
-          gRefreshDisplay = true;
+          //gRefreshDisplay = true;
           //Serial.println("goto set mode");
         }
       }
@@ -80,7 +80,7 @@ void loop() {
     
     if (prevButtonState == HIGH && gButtonState == LOW) {
       turnsCount = 0;
-      gRefreshDisplay = true;
+      //gRefreshDisplay = true;
       //Serial.println("State change Low to High");
       if (setMode == true) {
         setMode = false;
@@ -91,7 +91,7 @@ void loop() {
 
     // Something changeD, so update values and displap
     if (prevEncoderPos != gEncoderPos) {
-      gRefreshDisplay = true;
+      //gRefreshDisplay = true;
       if (setMode) {
         maxTurns += 10 *(gEncoderPos - prevEncoderPos);
       }
@@ -105,7 +105,7 @@ void loop() {
     digitalWrite(LEDPIN, setMode);
     
     // u8glib picture loop
-    u8g.firstPage();  
+    u8g.firstPage();
     do {
       UpdateCountDisplay_u8g(turnsCount, maxTurns, setMode);
     } while (u8g.nextPage());
@@ -142,7 +142,7 @@ ISR(PCINT1_vect) {
 
 
 void doButton(int pinState) {
-  gRefreshDisplay = true;
+  //gRefreshDisplay = true;
   gButtonState = pinState;
   if (gButtonState == LOW) {
     gButtonDownMillis = millis();
@@ -166,27 +166,41 @@ void doEncoder() {
 }
 
 
-void UpdateCountDisplay_u8g(long tc, int mc, bool mode)
+int flash_count = 0;
+#define FLASH_CYCLE     19
+#define FLASH_ON_COUNT  15
+void UpdateCountDisplay_u8g(int turns, int max_turns, bool set_mode)
 {
+  
+  flash_count += 1;
+  if (flash_count > FLASH_CYCLE) {
+    flash_count = 0;
+  }
+  
   // show the new value    
-  if (mode)  {
+  if (set_mode)  {
     u8g.setFont(u8g_font_helvR12);  
     u8g.setPrintPos(0, 12);
     u8g.print("Set Max Turns");
-    u8g.setPrintPos(80, 30);
-    u8g.print(mc);
+    u8g.setPrintPos(88, 30);
+    u8g.print(max_turns);
   }
   else {
-    long pt = 100 * abs(tc) / mc;
+    long pct_max = 100L * abs(turns) / max_turns;
+    
     u8g.setFont(u8g_font_helvR24);  
     u8g.setPrintPos(0, 30);
-    u8g.print(tc);
+    u8g.print(turns);
+
     u8g.setFont(u8g_font_helvR12);  
-    u8g.setPrintPos(80, 12);
-    u8g.print(pt);
-    u8g.print(" %");
-    u8g.setPrintPos(80, 30);
-    u8g.print(mc);
+    u8g.setPrintPos(88, 30);
+    u8g.print(max_turns);
+    
+    if (pct_max < 80 || flash_count < FLASH_ON_COUNT) {
+      u8g.setPrintPos(88, 12);
+      u8g.print(pct_max);
+      u8g.print(" %");
+    }
   }
 }
 
