@@ -21,12 +21,13 @@ LiPo batter. Rechargeable from a USB cable
 
 U8GLIB_SSD1306_128X32 u8g(U8G_I2C_OPT_NONE);	// I2C / TWI 
 
-#define SETMODETIME  2000
+#define INACTIVE_LIMIT  30000
+#define SETMODETIME  3000
 #define DEFAULTMAX   1600
 
 volatile unsigned int gEncoderPos = 0;
 volatile int gButtonState;
-//volatile bool gRefreshDisplay = true;
+volatile long gInactiveMillis;
 volatile long gButtonDownMillis;
 volatile int gPrevButtonPin;  
 volatile int gPrevEncoderPinA;
@@ -55,6 +56,8 @@ void loop() {
   int prevButtonState = 0;
   int prevEncoderPos = 0;
   bool setMode = false;
+
+  gInactiveMillis = 0;
   
   gButtonState = digitalRead(BUTTON_PIN);
   prevButtonState = gButtonState;
@@ -107,11 +110,18 @@ void loop() {
     // u8glib picture loop
     u8g.firstPage();
     do {
-      UpdateCountDisplay_u8g(turnsCount, maxTurns, setMode);
+      if (millis() - gInactiveMillis < INACTIVE_LIMIT) {
+        UpdateCountDisplay_u8g(turnsCount, maxTurns, setMode);
+      }
+      else {
+        // Turn off the display if nothing happends for a while
+        u8g.setFont(u8g_font_helvR12);  
+        u8g.setPrintPos(48, 24);
+        u8g.print("Sleep");
+      }
     } while (u8g.nextPage());
     delay(50);     // rebuild the picture after some delay
     // u8glib picture loop
-    
   } //end while(true)
 } // end loop()
 
@@ -125,6 +135,8 @@ void InitializeInterrupt(){
 
 
 ISR(PCINT1_vect) {
+  
+  gInactiveMillis = millis();
   
   //Emulate AttachInterrupt (..., CHANGE)
   int bp = digitalRead(BUTTON_PIN);
@@ -171,7 +183,6 @@ int flash_count = 0;
 #define FLASH_ON_COUNT  15
 void UpdateCountDisplay_u8g(int turns, int max_turns, bool set_mode)
 {
-  
   flash_count += 1;
   if (flash_count > FLASH_CYCLE) {
     flash_count = 0;
