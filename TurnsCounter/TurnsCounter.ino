@@ -181,7 +181,7 @@ void doEncoder() {
 int flash_count = 0;
 #define FLASH_CYCLE     19
 #define FLASH_ON_COUNT  15
-void UpdateCountDisplay_u8g(int turns, int max_turns, bool set_mode)
+void UpdateCountDisplay_u8g(int turns, int max_turns, bool display_mode)
 {
   flash_count += 1;
   if (flash_count > FLASH_CYCLE) {
@@ -189,7 +189,7 @@ void UpdateCountDisplay_u8g(int turns, int max_turns, bool set_mode)
   }
   
   // show the new value    
-  if (set_mode)  {
+  if (display_mode)  {
     u8g.setFont(u8g_font_helvR12);  
     u8g.setPrintPos(0, 12);
     u8g.print("Set Max Turns");
@@ -198,10 +198,11 @@ void UpdateCountDisplay_u8g(int turns, int max_turns, bool set_mode)
   }
   else {
     long pct_max = 100L * abs(turns) / max_turns;
-    
+    char st_turns[10];
+    itoa(turns, st_turns, 10);
     u8g.setFont(u8g_font_helvR24);  
-    u8g.setPrintPos(0, 30);
-    u8g.print(turns);
+    //u8g.setPrintPos(85 - u8g.getStrWidth(st_turns), 30);
+    u8g.drawStr(85 - u8g.getStrWidth(st_turns), 30, st_turns);
 
     u8g.setFont(u8g_font_helvR12);  
     u8g.setPrintPos(88, 30);
