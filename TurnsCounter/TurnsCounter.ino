@@ -14,16 +14,16 @@ LiPo batter. Rechargeable from a USB cable
 #include <avr/eeprom.h>
 
 #define LEDPIN        13   // onboard LED
-#define ENCODER_PINB  A1    // Port 2 Interrupt 1
-#define ENCODER_PINA  A2    // P2 interrupt 2
-#define BUTTON_PIN    A3    // P2 interrupt 3
-#define OLED_RESET    5
+#define BUTTON_PIN    A0   // Port 2 interrupt 0
+#define ENCODER_PINB  A1   // Port 2 Interrupt 1
+#define ENCODER_PINA  A2   // Port 2 interrupt 2
+#define OLED_RESET    A3
 
 U8GLIB_SSD1306_128X32 u8g(U8G_I2C_OPT_NONE);	// I2C / TWI 
 
 #define INACTIVE_LIMIT  30000
-#define SETMODETIME  3000
-#define DEFAULTMAX   1600
+#define SETMODETIME     3000
+#define DEFAULTMAX      1600
 
 volatile unsigned int gEncoderPos = 0;
 volatile int gButtonState;
@@ -31,6 +31,8 @@ volatile long gInactiveMillis;
 volatile long gButtonDownMillis;
 volatile int gPrevButtonPin;  
 volatile int gPrevEncoderPinA;
+
+volatile int toggleLed = 0;
 
 
 void setup()
@@ -105,8 +107,11 @@ void loop() {
     }
     
     // LED indicates setMode
-    digitalWrite(LEDPIN, setMode);
-    
+    //digitalWrite(LEDPIN, setMode);
+
+    // LED indicates setMode
+    digitalWrite(LEDPIN, toggleLed);
+
     // u8glib picture loop
     u8g.firstPage();
     do {
@@ -129,12 +134,19 @@ void loop() {
 void InitializeInterrupt(){
   cli();		// switch interrupts off while messing with their settings  
   PCICR =0x02;          // Enable PCINT1 interrupt
-  PCMSK1 = 0b00001110;  // Mask lower all but bits 1, 2,  & 3
+  PCMSK1 = 0b00000111;  // Mask lower all but bits 0, 1, & 2
   sei();		// turn interrupts back on
 }
 
 
 ISR(PCINT1_vect) {
+  
+  if (toggleLed == 0) {
+    toggleLed = 1;
+  }
+  else {
+    toggleLed = 0;
+  }    
   
   gInactiveMillis = millis();
   
@@ -201,7 +213,6 @@ void UpdateCountDisplay_u8g(int turns, int max_turns, bool display_mode)
     char st_turns[10];
     itoa(turns, st_turns, 10);
     u8g.setFont(u8g_font_helvR24);  
-    //u8g.setPrintPos(85 - u8g.getStrWidth(st_turns), 30);
     u8g.drawStr(85 - u8g.getStrWidth(st_turns), 30, st_turns);
 
     u8g.setFont(u8g_font_helvR12);  
@@ -215,4 +226,5 @@ void UpdateCountDisplay_u8g(int turns, int max_turns, bool display_mode)
     }
   }
 }
+
 
