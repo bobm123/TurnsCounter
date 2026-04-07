@@ -1,5 +1,6 @@
 #include <U8g2lib.h>
 #include <SPI.h>
+#include <Adafruit_NeoPixel.h>
 
 // QT Py ESP32-C3 display pin mappings
 U8G2_ST7565_ERC12864_ALT_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 10, /* data=*/ 7, /* cs=*/ 6, /* dc=*/ 8, /* reset=*/ 5);
@@ -12,6 +13,14 @@ U8G2_ST7565_ERC12864_ALT_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 10, /* data=*/ 7,
 
 // Button pin (BOOT button on QT Py ESP32-C3)
 #define BUTTON_PIN  9   // GPIO9 - active LOW with internal pull-up
+
+// NeoPixel
+#define NEOPIXEL_PIN 2
+Adafruit_NeoPixel pixel(1, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
+// Warning thresholds (percentage of maxTurns)
+#define WARN_THRESHOLD  80
+#define ALERT_THRESHOLD 90
 
 // Debounce time in milliseconds
 #define DEBOUNCE_MS 10
@@ -55,6 +64,16 @@ void setup() {
   // Backlight on
   pinMode(BACKLIGHT_LED, OUTPUT);
   digitalWrite(BACKLIGHT_LED, HIGH);
+
+  // NeoPixel power enable and init
+#ifdef NEOPIXEL_POWER
+  pinMode(NEOPIXEL_POWER, OUTPUT);
+  digitalWrite(NEOPIXEL_POWER, HIGH);
+#endif
+  pixel.begin();
+  pixel.setBrightness(50);
+  pixel.clear();
+  pixel.show();
 
   // Hall effect sensor inputs
   pinMode(HALL_LEFT, INPUT_PULLUP);
@@ -108,7 +127,7 @@ void loop() {
   }
 
   if (buttonDown && !buttonWasUp) {
-    // Button held — check for long press
+    // Button held - check for long press
     if (!longPressHandled && (now - buttonDownTime > SETMODE_TIME)) {
       longPressHandled = true;
       if (!setMode) {
@@ -147,9 +166,30 @@ void loop() {
     Serial.println(turnsCount);
   }
 
-  // --- Backlight: off after inactivity ---
+  // --- Warning indicators and backlight ---
+  int pctMax = (maxTurns > 0) ? (100L * abs(turnsCount) / maxTurns) : 0;
   bool active = (now - gLastActivityTime) < INACTIVE_TIMEOUT;
-  digitalWrite(BACKLIGHT_LED, active ? HIGH : LOW);
+
+  if (!active) {
+    // Inactive - backlight off, NeoPixel off
+    digitalWrite(BACKLIGHT_LED, LOW);
+    pixel.clear();
+  } else if (pctMax >= ALERT_THRESHOLD) {
+    // Over 90%: fast flash red NeoPixel + backlight
+    bool flash = (now / 100) % 2;  // ~5 Hz
+    pixel.setPixelColor(0, flash ? pixel.Color(255, 0, 0) : 0);
+    digitalWrite(BACKLIGHT_LED, flash ? HIGH : LOW);
+  } else if (pctMax >= WARN_THRESHOLD) {
+    // Over 80%: slow flash yellow NeoPixel, backlight steady
+    bool flash = (now / 300) % 2;  // ~1.7 Hz
+    pixel.setPixelColor(0, flash ? pixel.Color(255, 150, 0) : 0);
+    digitalWrite(BACKLIGHT_LED, HIGH);
+  } else {
+    // Normal - backlight on, NeoPixel off
+    digitalWrite(BACKLIGHT_LED, HIGH);
+    pixel.clear();
+  }
+  pixel.show();
 
   // --- Update display ---
   // Flash effect for set-mode: hide max value briefly
