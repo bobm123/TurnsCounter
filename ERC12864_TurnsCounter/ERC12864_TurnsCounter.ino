@@ -19,6 +19,12 @@ U8G2_ST7565_ERC12864_ALT_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 10, /* data=*/ 7,
 // Inactivity timeout for backlight (milliseconds)
 #define INACTIVE_TIMEOUT 60000
 
+// Long press threshold to enter set-mode (milliseconds)
+#define SETMODE_TIME 3000
+
+// Default max turns
+#define DEFAULT_MAX 1600
+
 // Volatile state shared between ISR and main loop
 volatile int gEncoderPos = 0;
 volatile unsigned long gLastInterruptTime = 0;
@@ -64,42 +70,115 @@ void setup() {
   u8g2.begin();
 }
 
-int prevCount = -99999;
+int turnsCount = 0;
+int prevTurns = 0;       // saved count from last reset
+int maxTurns = DEFAULT_MAX;
+int prevEncoderPos = 0;
+int prevDisplayedCount = -99999;
+bool setMode = false;
+bool buttonWasUp = true;
+unsigned long buttonDownTime = 0;
+bool longPressHandled = false;
 char buffer[12];
 
 void loop() {
-  // Snapshot volatile value (atomic read on 32-bit platform)
-  int currentCount = gEncoderPos;
+  unsigned long now = millis();
 
-  // Reset count on button press
-  if (digitalRead(BUTTON_PIN) == LOW) {
-    gEncoderPos = 0;
-    currentCount = 0;
-    gLastActivityTime = millis();
-    Serial.println("Count reset");
-    delay(200);  // Simple debounce — wait for release
+  // --- Encoder delta ---
+  int encoderPos = gEncoderPos;
+  int delta = encoderPos - prevEncoderPos;
+  if (delta != 0) {
+    prevEncoderPos = encoderPos;
+    if (setMode) {
+      maxTurns += 10 * delta;
+      if (maxTurns < 0) maxTurns = 0;
+    } else {
+      turnsCount += delta;
+    }
   }
 
-  // Serial debug on change
-  if (currentCount != prevCount) {
-    prevCount = currentCount;
+  // --- Button state machine ---
+  bool buttonDown = (digitalRead(BUTTON_PIN) == LOW);
+
+  if (buttonDown && buttonWasUp) {
+    // Button just pressed
+    buttonDownTime = now;
+    longPressHandled = false;
+    gLastActivityTime = now;
+  }
+
+  if (buttonDown && !buttonWasUp) {
+    // Button held — check for long press
+    if (!longPressHandled && (now - buttonDownTime > SETMODE_TIME)) {
+      longPressHandled = true;
+      if (!setMode) {
+        setMode = true;
+        Serial.println("Set mode ON");
+      }
+    }
+  }
+
+  if (!buttonDown && !buttonWasUp) {
+    // Button just released
+    if (!longPressHandled) {
+      // Short press
+      if (setMode) {
+        setMode = false;
+        Serial.print("Set mode OFF, max=");
+        Serial.println(maxTurns);
+      } else {
+        prevTurns = turnsCount;
+        turnsCount = 0;
+        gEncoderPos = 0;
+        prevEncoderPos = 0;
+        Serial.print("Reset. Prev=");
+        Serial.println(prevTurns);
+      }
+    }
+    gLastActivityTime = now;
+  }
+
+  buttonWasUp = !buttonDown;
+
+  // --- Serial debug on count change ---
+  if (turnsCount != prevDisplayedCount) {
+    prevDisplayedCount = turnsCount;
     Serial.print("Turns: ");
-    Serial.println(currentCount);
+    Serial.println(turnsCount);
   }
 
-  // Backlight: off after inactivity, on when activity resumes
-  bool active = (millis() - gLastActivityTime) < INACTIVE_TIMEOUT;
+  // --- Backlight: off after inactivity ---
+  bool active = (now - gLastActivityTime) < INACTIVE_TIMEOUT;
   digitalWrite(BACKLIGHT_LED, active ? HIGH : LOW);
 
-  // Update display
+  // --- Update display ---
+  // Flash effect for set-mode: hide max value briefly
+  bool flashOn = setMode && ((now / 300) % 2 == 0);
+
   u8g2.firstPage();
   do {
-    u8g2.setFont(u8g2_font_helvR12_tr);
+    // Row 1: Current count (large)
+    u8g2.setFont(u8g2_font_helvB12_tr);
     u8g2.drawStr(0, 15, "Turns:");
-    itoa(currentCount, buffer, 10);
+    itoa(turnsCount, buffer, 10);
     u8g2.setFont(u8g2_font_ncenB24_tr);
     int swidth = u8g2.getStrWidth(buffer);
     u8g2.drawStr(128 - swidth, 27, buffer);
+
+    // Row 2: Previous count
+    u8g2.setFont(u8g2_font_helvB10_tr);
+    u8g2.drawStr(0, 46, "Prev:");
+    itoa(prevTurns, buffer, 10);
+    swidth = u8g2.getStrWidth(buffer);
+    u8g2.drawStr(128 - swidth, 46, buffer);
+
+    // Row 3: Max turns (flashes in set-mode)
+    u8g2.drawStr(0, 61, "Max:");
+    if (!flashOn) {
+      itoa(maxTurns, buffer, 10);
+      swidth = u8g2.getStrWidth(buffer);
+      u8g2.drawStr(128 - swidth, 61, buffer);
+    }
   } while (u8g2.nextPage());
 
   delay(50);
