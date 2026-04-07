@@ -94,7 +94,7 @@ void loop() {
   // Update display
   u8g2.firstPage();
   do {
-    u8g2.setFont(u8g2_font_ncenB12_tr);
+    u8g2.setFont(u8g2_font_helvR12_tr);
     u8g2.drawStr(0, 15, "Turns:");
     itoa(currentCount, buffer, 10);
     u8g2.setFont(u8g2_font_ncenB24_tr);
