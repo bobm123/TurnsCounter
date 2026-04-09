@@ -3,12 +3,13 @@
 #include <Adafruit_NeoPixel.h>
 
 // QT Py ESP32-C3 display pin mappings
-U8G2_ST7565_ERC12864_ALT_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 10, /* data=*/ 7, /* cs=*/ 6, /* dc=*/ 8, /* reset=*/ 5);
+// CS tied low on the breakout board (single SPI device), so pass U8X8_PIN_NONE
+U8G2_ST7565_ERC12864_ALT_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 10, /* data=*/ 7, /* cs=*/ U8X8_PIN_NONE, /* dc=*/ 8, /* reset=*/ 5);
 #define BACKLIGHT_LED 0
 
 // Hall effect sensor pins (KY-003 modules)
 // Left sensor triggers the interrupt; right sensor is read for direction
-#define HALL_LEFT   1   // A2 = GPIO1 - interrupt pin
+#define HALL_LEFT   4   // A0 = GPIO4 - interrupt pin
 #define HALL_RIGHT  3   // A1 = GPIO3 - direction pin
 
 // Button pin (BOOT button on QT Py ESP32-C3)

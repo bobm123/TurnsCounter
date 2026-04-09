@@ -17,7 +17,7 @@ A turns counter for 3D-printed model airplane rubber band winders. Uses two hall
 
 | Function            | QT Py Pin | ESP32-C3 GPIO |
 | ------------------- | --------- | ------------- |
-| Hall sensor - left  | A2        | 1             |
+| Hall sensor - left  | A0        | 4             |
 | Hall sensor - right | A1        | 3             |
 | Button (BOOT)       | BOOT      | 9             |
 | NeoPixel            | -         | 2             |
@@ -103,7 +103,7 @@ STLs/                    3D printed parts (magnet disk for shaft)
 
 ## Future Plans
 
-- LiPo battery support via [Adafruit LiPo Charger BFF](https://www.adafruit.com/product/5397) (note: A2 pin conflict with hall sensor will require rewiring)
+- LiPo battery support via [Adafruit LiPo Charger BFF](https://www.adafruit.com/product/5397) (A2 is now free for battery voltage sensing)
 - Deep sleep mode with NVS save/restore of turn count
 - Progress bar on display
 - Custom PC board to replace the breadboard wiring
