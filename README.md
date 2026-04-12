@@ -10,6 +10,7 @@ A turns counter for 3D-printed model airplane rubber band winders. Uses two hall
 | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | [Adafruit QT Py ESP32-C3](https://www.adafruit.com/product/5405)                                                | Microcontroller board                                                                                          |
 | [ERC12864FSF-11](https://www.buydisplay.com/0-96-inch-low-cost-white-128x64-graphic-cog-lcd-display-st7567-spi) | 128x64 COG LCD (ST7567 controller) on [custom breakout board](../../../COGDisplayBreakout/COGDisplayBreakout/) |
+| APX805S                                                                                                         | Power-on reset IC for display /RST line (on breakout board)                                                    |
 | 2x KY-003                                                                                                       | Hall effect sensor modules (left and right)                                                                    |
 | Magnet                                                                                                          | Mounted on the winder output shaft                                                                             |
 
@@ -23,9 +24,9 @@ A turns counter for 3D-printed model airplane rubber band winders. Uses two hall
 | NeoPixel            | -         | 2             |
 | Display SCK         | SCK       | 10            |
 | Display SDA         | MO        | 7             |
-| Display CS          | SCL       | 6             |
+| Display CS          | -         | tied low      |
 | Display DC          | MI        | 8             |
-| Display RST         | SDA       | 5             |
+| Display RST         | -         | APX805S       |
 | Backlight LED       | A3        | 0             |
 
 ## Features

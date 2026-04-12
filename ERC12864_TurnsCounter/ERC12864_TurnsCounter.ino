@@ -3,8 +3,8 @@
 #include <Adafruit_NeoPixel.h>
 
 // QT Py ESP32-C3 display pin mappings
-// CS tied low on the breakout board (single SPI device), so pass U8X8_PIN_NONE
-U8G2_ST7565_ERC12864_ALT_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 10, /* data=*/ 7, /* cs=*/ U8X8_PIN_NONE, /* dc=*/ 8, /* reset=*/ 5);
+// CS tied low on breakout (single SPI device). RST managed by APX805S on breakout board.
+U8G2_ST7565_ERC12864_ALT_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 10, /* data=*/ 7, /* cs=*/ U8X8_PIN_NONE, /* dc=*/ 8, /* reset=*/ U8X8_PIN_NONE);
 #define BACKLIGHT_LED 0
 
 // Hall effect sensor pins (KY-003 modules)
